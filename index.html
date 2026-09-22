@@ -635,8 +635,10 @@ async function api(action, data = {}){
   const body = {action, token: S && S.token, ...data};
   if (DEMO) return Demo(body);
   let res;
-  try { res = await fetch(CONFIG.API_URL, {method:'POST', body: JSON.stringify(body)}); }
-  catch(e){ throw new Error('Can’t reach the server. Check the internet connection.'); }
+  const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), 25000);
+  try { res = await fetch(CONFIG.API_URL, {method:'POST', body: JSON.stringify(body), signal:ctrl.signal, cache:'no-store', redirect:'follow'}); }
+  catch(e){ throw new Error(e && e.name === 'AbortError' ? 'The server took too long to answer. Check the internet and try again.' : 'Can’t reach the server. Check the internet connection.'); }
+  finally { clearTimeout(timer); }
   const j = await res.json().catch(() => ({ok:false, error:'The server sent an unexpected reply. Check the Web app URL and deployment.'}));
   if (!j.ok){ if (j.code === 'AUTH') logout('Your session has ended. Log in again.'); throw new Error(j.error); }
   return j.data;
@@ -822,13 +824,14 @@ addEventListener('online', () => toast('Back online'));
 
 /* ===== business settings ===== */
 let SETTINGS = store.get('sr-settings', null) || {name:CONFIG.SHOP, tagline:'Point of Sale', logo:'', address:CONFIG.ADDRESS, phone:CONFIG.PHONE, footer:CONFIG.FOOTER};
+const LOGO_FALLBACK = IC.chef;
 function applyBrand(){
   const st = SETTINGS;
   const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
   set('brandName', st.name); set('who', st.tagline || ''); set('loginName', st.name);
   document.title = st.name + ' · POS';
   const bl = $('#brandLogo'), ll = $('#loginLogo');
-  if (bl){ bl.classList.toggle('img', !!st.logo); bl.innerHTML = st.logo ? `<img src="${esc(st.logo)}" alt="">` : IC.chef; }
+  if (bl){ bl.classList.toggle('img', !!st.logo); bl.innerHTML = st.logo ? `<img src="${esc(st.logo)}" alt="" onerror="this.closest('.logo').classList.remove('img');this.closest('.logo').innerHTML=LOGO_FALLBACK">` : IC.chef; }
   if (ll){ ll.classList.toggle('img', !!st.logo); ll.innerHTML = st.logo ? `<img src="${esc(st.logo)}" alt="">` : esc((st.name || 'S')[0].toUpperCase()); }
 }
 async function loadSettings(){ try { const st = await api('getSettings'); SETTINGS = st; store.set('sr-settings', st); applyBrand(); } catch(e){} }
@@ -1096,7 +1099,7 @@ async function saveBill(){
 
 /* ===== receipt ===== */
 function receiptHTML(b){
-  return `<div class="receipt num">${SETTINGS.logo ? `<div class="c"><img src="${esc(SETTINGS.logo)}" alt="" style="width:54px;height:54px;object-fit:contain;border-radius:10px"></div>` : ''}<h3>${esc(SETTINGS.name)}</h3>
+  return `<div class="receipt num">${SETTINGS.logo ? `<div class="c"><img src="${esc(SETTINGS.logo)}" alt="" style="width:54px;height:54px;object-fit:contain;border-radius:10px" onerror="this.style.display='none'"></div>` : ''}<h3>${esc(SETTINGS.name)}</h3>
     ${SETTINGS.address ? `<div class="c">${esc(SETTINGS.address)}</div>` : ''}${SETTINGS.phone ? `<div class="c">Tel: ${esc(SETTINGS.phone)}</div>` : ''}<hr>
     <div>Bill: <b>${esc(b.billNo)}</b></div><div>${esc(b.date)} ${esc(b.time)} · ${esc(b.orderType)}${b.tableNo ? ' · Table ' + esc(b.tableNo) : ''}</div><div>Cashier: ${esc(b.cashier)}</div>
     ${b.status === 'VOID' ? '<div class="c" style="font-weight:800;color:#D2352B">CANCELLED</div>' : ''}<hr>
@@ -1122,7 +1125,10 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape'){ if (CAM) cl
 async function renderBills(){
   $('#view').innerHTML = `<div class="page"><h2>Today’s bills</h2><p class="muted">Loading…</p></div>`;
   let bills = [];
-  try { bills = await api('listBills'); } catch(e){ toast(e.message, {bad:true}); }
+  try { bills = await api('listBills'); }
+  catch(e){ if (VIEW !== 'bills') return;
+    $('#view').innerHTML = `<div class="page"><h2>Today’s bills</h2><div class="box" style="margin:14px 0 0"><h3>Couldn’t load</h3><p style="margin:0 0 12px;font-size:14px;color:var(--muted)">${esc(e.message)}</p><button class="btn yellow" style="width:100%" id="rf">Try again</button></div></div>`;
+    return; }
   if (VIEW !== 'bills') return;
   const ok = bills.filter(b => b.status !== 'VOID'), total = ok.reduce((a, b) => a + b.total, 0);
   TODAY_N = bills.filter(x => x.status !== 'VOID').length;
@@ -1144,7 +1150,10 @@ document.addEventListener('click', async e => {
 /* ===== menu manager (owner) ===== */
 async function renderMenu(){
   $('#view').innerHTML = `<div class="page"><h2>Menu</h2><p class="muted">Loading…</p></div>`;
-  try { MENU = await api('getMenu'); store.set('sr-menu', MENU); } catch(e){ toast(e.message, {bad:true}); }
+  try { MENU = await api('getMenu'); store.set('sr-menu', MENU); }
+  catch(e){ if (VIEW !== 'menu') return;
+    $('#view').innerHTML = `<div class="page"><h2>Menu</h2><div class="box" style="margin:14px 0 0"><h3>Couldn’t load</h3><p style="margin:0 0 12px;font-size:14px;color:var(--muted)">${esc(e.message)}</p><button class="btn yellow" style="width:100%" id="rmenu">Try again</button></div></div>`;
+    $('#rmenu').onclick = renderMenu; return; }
   if (VIEW !== 'menu') return;
   const cats = categoriesOf(MENU);
   $('#view').innerHTML = `<div class="page"><h2>Menu</h2><p class="muted">${MENU.length} items in ${cats.length} categor${cats.length === 1 ? 'y' : 'ies'} · tap an item to change or remove it</p>
