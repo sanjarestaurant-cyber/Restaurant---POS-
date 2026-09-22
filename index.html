@@ -4,8 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Restaurant POS</title>
-<meta name="theme-color" content="#1F2421">
+<meta name="theme-color" content="#0F1318">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Restaurant POS">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -563,7 +569,7 @@ body::before{background:radial-gradient(36vmax 30vmax at 10% 0%, var(--blob1), t
 <script>
 /* ===== SETTINGS ===== */
 const CONFIG = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbymoSXQxSSG9bLTfdQxguOJPEws81SP7u90CjZCPb-Z3ihRnHrYLaWu8k-kqIqB9B3N/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycbxK9xKD2FTIgA3PUxChmS-5uq_YabdJl9FkkXLIeD4MqqdzvTpIjrPY6bxdnib32p5o/exec',
   SHOP: 'My Restaurant',
   ADDRESS: '',          // e.g. 'No 12, Main Street, Galle'
   PHONE: '',            // e.g. '077 123 4567'
@@ -749,14 +755,48 @@ $('#menuBtn').onclick = () => {
   const r = $('#menuBtn').getBoundingClientRect();
   m.style.top = (r.bottom + 8) + 'px'; m.style.right = Math.max(10, innerWidth - r.right) + 'px';
   m.innerHTML = `<div class="pmwho"><span class="av">${esc((S.user.name || '?')[0].toUpperCase())}</span><span><b>${esc(S.user.name)}</b><small>${esc(S.user.role)}</small></span></div>
+    ${canInstall() ? `<button role="menuitem" id="pmInstall"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg><span>Install app</span><span class="chev">›</span></button>` : ''}
     ${S.user.role === 'Owner' ? `<button role="menuitem" id="pmSettings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg><span>Settings</span><span class="chev">›</span></button>` : ''}
     <button role="menuitem" id="pmOut" class="pmout">${IC.out}<span>Log out</span></button>`;
   document.body.append(sc, m); $('#menuBtn').setAttribute('aria-expanded','true');
   const st = $('#pmSettings'); if (st) st.onclick = () => { closeAppMenu(); openSettings(); };
+  const ins = $('#pmInstall'); if (ins) ins.onclick = () => { closeAppMenu(); doInstall(); };
   $('#pmOut').onclick = () => { closeAppMenu(); logout(); };
   (st || $('#pmOut')).focus();
 };
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAppMenu(); });
+
+/* ===== install as an app + offline shell ===== */
+let INSTALL = null;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); INSTALL = e; });
+addEventListener('appinstalled', () => { INSTALL = null; toast('Installed. Open it from your home screen.'); });
+const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent);
+function canInstall(){ return !standalone() && (INSTALL || isIOS()); }
+async function doInstall(){
+  if (INSTALL){ INSTALL.prompt(); const r = await INSTALL.userChoice.catch(() => null);
+    if (r && r.outcome !== 'accepted') toast('You can install it later from ☰ → Install app'); INSTALL = null; return; }
+  openSheet(`<h3 style="margin:0 0 6px">Add to your home screen</h3>
+    <p style="margin:0;font-size:15px;line-height:1.5">In <b>Safari</b>, tap the <b>Share</b> button at the bottom, then <b>Add to Home Screen</b>. The app then opens full screen, without the browser bar.</p>
+    <p class="muted" style="margin:10px 0 0">Safari eke Share → Add to Home Screen.</p>
+    <button class="btn dark" style="width:100%;margin-top:14px" data-close>Got it</button>`);
+}
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost') && !/claude|anthropic/.test(location.hostname)){
+  addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      reg.addEventListener('updatefound', () => { const w = reg.installing;
+        w && w.addEventListener('statechange', () => {
+          if (w.state === 'installed' && navigator.serviceWorker.controller)
+            toast('A new version is ready.', {action:'Update', sticky:true, onAction:() => w.postMessage('skip')});
+        });
+      });
+    }).catch(() => {});
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (!reloaded){ reloaded = true; location.reload(); } });
+  });
+}
+addEventListener('offline', () => toast('No internet. Bills can’t be saved until it’s back.', {bad:true}));
+addEventListener('online', () => toast('Back online'));
 
 /* ===== business settings ===== */
 let SETTINGS = store.get('sr-settings', null) || {name:CONFIG.SHOP, tagline:'Point of Sale', logo:'', address:CONFIG.ADDRESS, phone:CONFIG.PHONE, footer:CONFIG.FOOTER};
