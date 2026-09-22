@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Restaurant POS</title>
 <meta name="theme-color" content="#0F1318">
 <link rel="manifest" href="manifest.json">
@@ -473,7 +473,7 @@ body::before{background:radial-gradient(36vmax 30vmax at 10% 0%, var(--blob1), t
 .pbtns{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .gbtn{display:inline-flex!important;align-items:center;gap:8px;border:1px solid var(--glass-border);background:var(--glass);border-radius:14px;padding:10px 14px;font-weight:600;font-size:14px;cursor:pointer;opacity:1!important;margin:0!important}
 .gbtn svg{width:18px;height:18px}
-.sheet .in{border-radius:14px!important;padding:12px 13px!important;font-size:15px!important}
+.sheet .in{border-radius:14px!important;padding:12px 13px!important;font-size:16px!important}
 .sheet .in:focus{border-color:var(--gold)!important;box-shadow:0 0 0 3px rgba(245,180,0,.2), 0 0 16px rgba(245,180,0,.25)!important}
 .selwrap{position:relative}.selwrap>svg{z-index:2;position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--gold);pointer-events:none}
 .sheet .selwrap select.in,.selwrap select{padding-left:40px!important;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 12px center!important;background-size:16px!important}
@@ -523,6 +523,28 @@ body::before{background:radial-gradient(36vmax 30vmax at 10% 0%, var(--blob1), t
   body.has-tabbar .cart:not(.collapsed){border-radius:26px!important;left:8px!important;right:8px!important}
   body.has-tabbar .menu{padding-bottom:230px!important}
 }
+
+
+/* ===== stop accidental zoom on phones ===== */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{touch-action:manipulation}                       /* no double-tap zoom */
+button,.tile,.chipbig,.cats button,.navs button,.tabbar button,.notes button,.qty button,.seg button,
+.methods button,.subtabs button,.quick button,.scantile,.cart-peek,.brow,.rowbtn,.mlist button,.blist button,
+.xbtn,.menubtn,.themebtn,.gbtn,.popmenu button,.addstk,.switch,label.swrow{touch-action:manipulation}
+/* iOS zooms in when a box has text under 16px — keep every box at 16px */
+input,select,textarea,.in,.qin,.sheet .in,.searchbar input,.tablesel select{font-size:16px!important}
+.qin{width:52px!important}
+.sheet label,.swrow{font-size:15px}
+
+
+/* ===== stop the phone zooming when you tap ===== */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{touch-action:manipulation}
+button,a,label,.tile,.chipbig,.notes button,.cats button,.navs button,.tabbar button,.subtabs button,.methods button,.quick button,.qty button{touch-action:manipulation}
+input,select,textarea,.in,.qin,.searchbar input,.sheet .in,.tablesel select{font-size:16px!important}
+.qin{font-size:16px!important}
+.searchbar input{font-size:16px!important}
+.notes button,.quick button{font-size:14px}
 
 #print{display:none}
 @media print{
