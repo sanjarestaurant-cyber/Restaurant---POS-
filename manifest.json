@@ -1,0 +1,22 @@
+{
+  "name": "Restaurant POS",
+  "short_name": "POS",
+  "description": "Billing, menu, dashboard and stock for your restaurant.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0A0D11",
+  "theme_color": "#0F1318",
+  "categories": ["business", "productivity", "food"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "New bill", "short_name": "New bill", "url": "./index.html#pos", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Today's bills", "short_name": "Today", "url": "./index.html#bills", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+  ]
+}
