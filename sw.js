@@ -1,6 +1,6 @@
 /* Restaurant POS — service worker
    Bump CACHE when you change index.html, so every phone gets the new version. */
-const CACHE = 'rpos-v2';
+const CACHE = 'rpos-v3';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
